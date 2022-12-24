@@ -7,7 +7,7 @@ from security.jwt_handler import signJWT_access, signJWT_refresh
 from security.jwt_bearer import JWTBearer
 import requests
 
-
+# new dataS
 
 models.Base.metadata.create_all(bind=engine)
 db = SessionLocal()
