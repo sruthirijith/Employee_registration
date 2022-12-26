@@ -90,7 +90,7 @@ def employee_login(email:str, password:str):
 # Get OTP        
 @app.get("/get otp")
 async def get_otp(mobile:str):
-        login_mobile=db.query(models.user_register).filter(models.user_register.mobile_no==mobile)
+        login_mobile=db.query(models.user_register).filter(models.user_register.mobile_no==mobile).first()
         if login_mobile:
             url = "https://2factor.in/API/V1/e58bd034-5ff3-11ed-9c12-0200cd936042/SMS/{}/AUTOGEN/OTP1".format(str(mobile))
 
@@ -106,9 +106,9 @@ async def get_otp(mobile:str):
 #Verify otp
 @app.get("/verify otp")
 async def verify_otp(mobile:str,Otp:str):
-    login_mobile=db.query(models.user_register).filter(models.user_register.mobile_no==mobile)
+    login_mobile=db.query(models.user_register).filter(models.user_register.mobile_no==mobile).first()
     if login_mobile:
-        url = "https://2factor.in/API/V1/e58bd034-5ff3-11ed-9c12-0200cd936042/SMS/{}/AUTOGEN/OTP1".format(str(mobile))
+        url = "https://2factor.in/API/V1/e58bd034-5ff3-11ed-9c12-0200cd936042/SMS/VERIFY3/91{}/{}".format(str(mobile),Otp)
 
         payload={}
         headers = {}
@@ -177,6 +177,76 @@ async def update_user_profile(first_name:str,last_name:str,city:str,place_of_bir
     db.refresh(update_data)
     
     return ("profile updated")
+
+
+#change password
+@app.put("/change password",dependencies=[Depends(JWTBearer())], tags=["profile"])
+async def change_password(old_password:str, password1:str, password2:str,db:Session = Depends(get_db),token:str=Depends(JWTBearer())):
+    decodedata= decodeJWT(token)
+    users = crud.get_user_by_phone(db,mobile_no=decodedata['mobile_number'])
+    
+    if users.password == old_password :
+        if password1 == password2 :
+            users.password = password1
+            db.add(users)
+            db.commit()
+            db.refresh(users)
+            return "password updated succesfully"
+        else:    
+            return "password not matching"
+
+    else:
+        return "invalid password"        
+
+            
+#forgot password
+@app.get("/forgot password", tags=["profile"])
+async def forgot_password(mobile:str):
+    login_mobile=db.query(models.user_register).filter(models.user_register.mobile_no==mobile).first()
+    if login_mobile:
+        url = "https://2factor.in/API/V1/e58bd034-5ff3-11ed-9c12-0200cd936042/SMS/{}/AUTOGEN/OTP1".format(str(mobile))
+
+        payload={}
+        headers = {}
+
+        response = requests.request("GET", url, headers=headers, data=payload)
+
+        print(response.text)
+        return("otp has sent")
+    else:
+        return "not a registered mobile number"    
+
+          
+#verify otp to update password
+@app.put("/verify otp", tags=["profile"])
+async def verify_otp(mobile:str, otp:str,new_password:str, confirm_password:str):
+    login_mobile=db.query(models.user_register).filter(models.user_register.mobile_no==mobile).first()
+    if login_mobile:
+        url = "https://2factor.in/API/V1/e58bd034-5ff3-11ed-9c12-0200cd936042/SMS/VERIFY3/91{0}/{1}".format(str(mobile),otp)
+
+        payload={}
+        headers = {}
+
+        response = requests.request("GET", url, headers=headers, data=payload)
+
+        print(response.text)
+        
+        if new_password==confirm_password:
+            login_mobile.password = new_password
+            db.add(login_mobile)
+            db.commit()
+            db.refresh(login_mobile)
+            return("password has updated")
+        else:
+            return "password not matching"
+    else:
+        return "invalid otp"            
+
+
+          
+
+
+
 
     
 
