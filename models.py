@@ -15,3 +15,16 @@ class user_register(Base):
     sex          =Column(String(255),index=true,nullable=False)
     dob          =Column(String(255),index=true,nullable=False)
     password     =Column(String(255),index=True, nullable=False, unique=True)
+
+class profile(Base):    
+
+    __tablename__ = "user_profile_table"
+    id           = Column(Integer, primary_key=True, autoincrement=True, index=True, nullable=False)
+    first_name     = Column(String(255),index=True, nullable=False)
+    last_name     = Column(String(255),index=True, nullable=False)
+    city           = Column(String(255),index=True,nullable=False)
+    place_of_birth = Column(String(255), index=True,nullable=False)
+    user_id        = Column(Integer,ForeignKey('user_register_table.id'))
+   
+
+

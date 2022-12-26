@@ -10,3 +10,10 @@ class Base(BaseModel):
     sex          : str
     dob          : str
     password     :str
+
+class Profile(BaseModel):
+    first_name   : str
+    last_name    : str
+    city         : str
+    place_of_birth: str
+   

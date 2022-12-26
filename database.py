@@ -14,3 +14,14 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
+def get_db():    # to get all the tables in this database
+    db= SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def create_tables():
+    print("create tables")
+    Base.metadata.create_all(bind=engine)
